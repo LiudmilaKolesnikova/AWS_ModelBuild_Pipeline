@@ -100,9 +100,8 @@ def turn_action_taken_into_binary_target_variable(df):
     df.loc[(df['action_taken'].isin([3, 7])), 'action_taken'] = 0                              
     return df
     
-# According to 2023 "Guide To HMDA Reporting. Getting It Right!" applications that fall under the categories filtered out
+# According to the 2023 "Guide To HMDA Reporting. Getting It Right!" applications that fall under the categories filtered out
 # below are applications submitted by legal entities as opposed to natural persons.
-
 def delete_non_natural_person_entries(df):
     df = df.drop(df[((df['applicant_ethnicity-1'] == 4.0) | (df['co-applicant_ethnicity-1'] == 4))
                  & ((df['applicant_race-1'] == 7.0) | (df['co-applicant_race-1'] == 7.0))
@@ -162,26 +161,12 @@ def replace_numeric_occupancy_type(df):
     choices = ['Principal residence', 'Second residence', 'Investment property']
     df['occupancy_type'] = np.select(conditions, choices)
     return df
-
-#def replace_numeric_construction_method(df):
-#    conditions = [(df['construction_method'] == 1), (df['construction_method'] == 2)
-#                 ]
-#    choices = ['Site-built', 'Manufactured home']
-#    df['construction_method'] = np.select(conditions, choices)
-#    return df
     
 def replace_exempt(df):
     collection = ['debt_to_income_ratio', 'property_value', 'loan_term', 'loan_to_value_ratio']
     for feature_type in collection:
         df.replace({feature_type: {'Exempt': pd.NA}}, inplace = True)
     return df
-
-#def replace_numeric_hoepa_status(df):
-#    conditions = [(df['hoepa_status'] == 1), (df['hoepa_status'] == 2), (df['hoepa_status'] == 3)
-#                 ]
-#    choices = ['High-cost mortgage', 'Not a high-cost mortgage', pd.NA]
-#    df['hoepa_status'] = np.select(conditions, choices)
-#    return df
 
 def replace_numeric_3_conditions_with_exempt(df):
     feature_collection = ['other_nonamortizing_features', 'balloon_payment', 'interest_only_payment', 'negative_amortization',
@@ -218,84 +203,7 @@ def replace_numeric_2_conditions(df):
         choices = list
         df[feature_type] = np.select(conditions, choices, default=0)
     return df
-
-#def replace_numeric_3_conditions(df):
-#    feature_collection = ['occupancy_type', 'hoepa_status'
-#                         ]
-#    substitute_collection = [
-#        ['Principal residence', 'Second residence', 'Investment property'],
-#        ['High-cost mortgage', 'Not a high-cost mortgage', pd.NA]     
-#    ]
-#    for feature_type, list in zip(feature_collection, substitute_collection):
-#       conditions = [(df[feature_type] == 1), (df[feature_type] == 2),
-#                      (df[feature_type] == 3)
-#                     ]
-#        choices = list
-#        df[feature_type] = np.select(conditions, choices, default=0)
-#    return df    
-
-#def replace_numeric_other_nonamortizing_features(df):
-#    conditions = [(df['other_nonamortizing_features'] == 1), (df['other_nonamortizing_features'] == 2),
-#                  (df['other_nonamortizing_features'] == 1111)
-#                 ]
-#    choices = ['Other non-fully amortizing features', 'No other non-fully amortizing features', pd.NA]
-#    df['other_nonamortizing_features'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_balloon_payment(df):
-#    conditions = [(df['balloon_payment'] == 1), (df['balloon_payment'] == 2),
-#                  (df['balloon_payment'] == 1111)
-#                 ]
-#    choices = ['Balloon payment', 'No balloon payment', pd.NA]
-#    df['balloon_payment'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_interest_only_payment(df):
-#    conditions = [(df['interest_only_payment'] == 1), (df['interest_only_payment'] == 2),
-#                  (df['interest_only_payment'] == 1111)
-#                 ]
-#    choices = ['Interest-only payments', 'No interest-only payments', pd.NA]
-#    df['interest_only_payment'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_negative_amortization(df):
-#    conditions = [(df['negative_amortization'] == 1), (df['negative_amortization'] == 2),
-#                  (df['negative_amortization'] == 1111)
-#                 ]
-#    choices = ['Negative amortization', 'No negative amortization', pd.NA]
-#    df['negative_amortization'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_business_or_commercial_purpose(df):
-#    conditions = [(df['business_or_commercial_purpose'] == 1), (df['business_or_commercial_purpose'] == 2),
-#                  (df['business_or_commercial_purpose'] == 1111)
-#                 ]
-#    choices = ['Primarily for a business or commercial purpose', 'Not primarily for a business or commercial purpose', pd.NA]
-#    df['business_or_commercial_purpose'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_open_end_line_of_credit(df):
-#    conditions = [(df['open-end_line_of_credit'] == 1), (df['open-end_line_of_credit'] == 2),
-#                  (df['open-end_line_of_credit'] == 1111)
-#                 ]
-#    choices = ['Open-end line of credit', 'Not an open-end line of credit', pd.NA]
-#    df['open-end_line_of_credit'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_reverse_mortgage(df):
-#    conditions = [(df['reverse_mortgage'] == 1), (df['reverse_mortgage'] == 2),
-#                  (df['reverse_mortgage'] == 1111)
-#                 ]
-#    choices = ['Reverse mortgage', 'Not a reverse mortgage', pd.NA]
-#    df['reverse_mortgage'] = np.select(conditions, choices)
-#    return df
-
-#def replace_numeric_lien_status(df):
-#    conditions = [(df['lien_status'] == 1), (df['lien_status'] == 2)
-#                 ]
-#   choices = ['Secured by a first lien', 'Secured by a subordinate lien']
-#    df['lien_status'] = np.select(conditions, choices)
-#    return df
+   
 
 def replace_numeric_loan_purpose(df):
     conditions = [(df['loan_purpose'] == 1), (df['loan_purpose'] == 2), (df['loan_purpose'] == 31), (df['loan_purpose'] == 32), 
@@ -315,65 +223,6 @@ def move_target_column_to_the_front(df):
     col = df.pop("action_taken")
     df.insert(0, col.name, col)
     return df    
-
-#def replace_numeric_preapproval(df):
-#    conditions = [(df['preapproval'] == 1), (df['preapproval'] == 2)]
-#    choices = ['Preapproval requested', 'Preapproval not requested']
-#    df['preapproval'] = np.select(conditions, choices)
-#    return df
-
-
-    
-#def replace_numerical_co_applicant_sex(df):
-#    conditions = [(df['applicant_sex'] == 1), (df['applicant_sex'] == 2), (df['applicant_sex'] == 3), (df['applicant_sex'] == 6)
-#    ]
-#    choices = ['Male', 'Female', 'Not Provided', 'Both']
-#    df['co-applicant_sex'] = np.select(conditions, choices, default = 'NaN')
-#    return df
-
-#def replace_numerical_applicant_race_1(df):
-#    conditions = [(df['applicant_race'] == 1), (df['applicant_race'] == 2), (df['applicant_race'] == 3), 
-#                  (df['applicant_race'] == 6)
-#    ]
-#    choices = ['American Indian or Alaska Native', 'Asian', 'Black or African American', 
-#               'Native Hawaiian or Other Pacific Islander', 'White'
-#              ]
-#    df['applicant_race'] = np.select(conditions, choices, default = 'NaN')
-#    return df
-
-#---------------------NOTES FOR LATER------------------------------
-#def code_to_description(df): 
-#    return df
-
-#First apply turn_action_taken_into_binary_target_variable, then the rest
-#------------------------------------------------------------------
-#def create_derived_race_revisited(df):
-#    conditions = [
-#        (df['derived_race'] == 'White') & (df['derived_ethnicity'] == 'Hispanic or Latino'),
-#        ((df['applicant_race-1'] == 3.0) & ((df['co-applicant_race-1'] == 3.0) | (df['co-applicant_race-1'] == 6.0) | (df['co-applicant_race-1'] == 7.0) | (df['co-applicant_race-1'] == 8.0))) |
-#        ((df['co-applicant_race-1'] == 3.0) & ((df['applicant_race-1'] == 3.0) | (df['applicant_race-1'] == 6.0) | (df['applicant_race-1'] == 7.0) | (df['applicant_race-1'] == 8.0))),
-#        ((df['applicant_race-1'].isin([2, 21, 22, 23, 24, 25, 26, 27])) & ((df['co-applicant_race-1'].isin([2, 21, 22, 23, 24, 25, 26, 27])) | (df['co-applicant_race-1'] == 6.0) | (df['co-applicant_race-1'] == 7.0) | (df['co-applicant_race-1'] == 8.0))) |
-#        ((df['co-applicant_race-1'].isin([2, 21, 22, 23, 24, 25, 26, 27])) & ((df['applicant_race-1'].isin([2, 21, 22, 23, 24, 25, 26, 27])) | (df['applicant_race-1'] == 6.0) | (df['applicant_race-1'] == 7.0) | (df['applicant_race-1'] == 8.0)))
-#    ]
-#    choices = ['Hispanic or Latino', 'Black or African American', 'Asian']
-#    df['derived_race_revisited'] = np.select(conditions, choices, df['derived_race'])
-#    return df
-
-##df_after_initial_deletion = delete_columns(df_raw)
-##df_new_feature_derived_age_above_62 = create_derived_age_above_62(df_after_initial_deletion)
-##df_new_feature_derived_age_below_25 = create_derived_age_below_25(df_new_feature_derived_age_above_62)
-##df_new_feature_derived_race_revisited = create_derived_race_revisited(df_new_feature_derived_age_below_25)
-#df_new_feature_derived_race_revisited
-#df_new_feature_derived_race_revisited.dropna(subset=['denial_reason-4'])
-#df_new_feature_derived_race_revisited.loc[df_new_feature_derived_race_revisited['action_taken'] == 6].tail(60)
-##df_binary_target_variable = turn_action_taken_into_binary_target_variable(df_new_feature_derived_race_revisited) 
-#df_binary_target_variable.loc[df_binary_target_variable['action_taken'] == 7].count()
-##df_new_feature_if_co_applicant = create_if_co_applicant(df_binary_target_variable)
-#df_non_numerical_identifiers=replace_numerical_applicant_sex(df_new_feature_if_co_applicant)
-#df_non_numerical_identifiers
-##df_natural_persons = replace_numeric(delete_non_natural_person_entries(df_new_feature_if_co_applicant))
-##df_natural_persons
-#delete_non_natural_person_entries(turn_action_taken_into_binary_target_variable(
 
 if __name__ == "__main__":
     logger.debug("Starting preprocessing.")
