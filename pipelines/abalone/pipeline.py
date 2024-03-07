@@ -1,4 +1,4 @@
-"""Example workflow pipeline script for abalone pipeline.
+"""Example workflow pipeline script for hmda pipeline.
                                                                                  . -ModelStep
                                                                                 .
     Process-> DataQualityCheck/DataBiasCheck -> Train -> Evaluate -> Condition .
@@ -166,8 +166,6 @@ def get_pipeline_custom_tags(new_tags, region, sagemaker_project_name=None):
     return new_tags
 
 
-# ["ml.m5.large"]
-# -//-
 def get_pipeline(
     region,
     role=None,
@@ -268,7 +266,6 @@ def get_pipeline(
     # the baseline, in this case, the training dataset from the data processing step, the dataset format, in this case,
     # a csv file with no headers, and the output path for the results of the data quality check.
 
-    # ["ml.c5.xlarge"] # ["ml.m5.large"]
     check_job_config = CheckJobConfig(
         role=role,
         instance_count=1,
@@ -322,7 +319,7 @@ def get_pipeline(
         s3_analysis_config_output_path=data_bias_analysis_cfg_output_path,
     )
 
-    # We are using this bias config to configure clarify to detect bias based on the first feature in the featurized vector for Sex
+    # We are using this bias config to configure clarify to detect bias in the features enumerated in the facet_name list 
     data_bias_config = BiasConfig(
         label_values_or_threshold=[1], facet_name=["derived_sex", "derived_age_above_62", "derived_age_below_25",
         "derived_race_revisited", "if_co-applicant"]
@@ -342,11 +339,7 @@ def get_pipeline(
         model_package_group_name=model_package_group_name
     )
     
-    #### AutoML Step
-    
-    # The job configuration from the previous step is used here and the `DataConfig` class is used to define how
-    # the `ClarifyCheckStep` should compute the data bias. The training dataset is used again for the bias evaluation,
-    # the column representing the label is specified through the `label` parameter, and a `BiasConfig` is provided.    
+    #### AutoML Step    
 
     auto_ml = AutoML(
         role=role, 
@@ -398,77 +391,12 @@ def get_pipeline(
         step_args=step_args,
         depends_on=["DataQualityCheckStep", "DataBiasCheckStep"]
     )
-# Implementation using AWS SDK for Python, namely, low-level Boto3 library
-#
-#    auto_ml_job_name = "HMDAClassification"
-#
-#    prefix = "dataset"
-#    input_data_config = [
-#        {
-#            "ChannelType": "training",
-#            "ContentType": "text/csv;header=present",
-#            "CompressionType": "None",            
-#            "DataSource": {
-#                "S3DataSource": {
-#                    "S3DataType": "S3Prefix",
-#                    "S3Uri": "s3://{}/{}/state_DC.csv".format(default_bucket, prefix),
-#                }
-#            }
-#        }
-#    ]
-#
-#    prefix = "autopilot-output"    
-#    output_data_config = {"S3OutputPath": "s3://{}/{}".format(default_bucket, prefix)}
-#    
-#    auto-ml-problem-type-config = {
-#        "TabularJobConfig": {
-#            "CompletionCriteria": {
-#                'MaxCandidates': 70,
-#                'MaxRuntimePerTrainingJobInSeconds': 180,
-#                'MaxAutoMLJobRuntimeInSeconds': 3600
-#            },
-#            "Mode": "AUTO",
-#            "GenerateCandidateDefinitionsOnly": "False",
-#            "ProblemType": "BinaryClassification",
-#            "TargetAttributeName": "action_taken"
-#        }
-#    }
-#    
-#    auto-ml-job-objective = {
-#        'MetricName': "F1"
-#    }
-#    
-#    model-deploy-config = {
-#        "AutoGenerateEndpointName": "False",
-#        "EndpointName": "hmda_classification_model"
-#    }
-#    
-#    data-split-config={
-#        "ValidationFraction": "0.2"
-#    }    
-#    
-#    sagemaker_client = get_sagemaker_client(region)
-#    
-#    sagemaker_client.create_auto_ml_job_v2(
-#        AutoMLJobName=auto_ml_job_name,
-#        AutoMLJobInputDataConfig=input_data_config,
-#        OutputDataConfig=output_data_config,
-#        AutoMLProblemTypeConfig=auto-ml-problem-type-config,
-#        RoleArn=role,
-#        AutoMLJobObjective=auto-ml-job-objective,
-#        ModelDeployConfig=model-deploy-config,
-#        DataSplitConfig=data-split-config
-#    )    
  
     best_auto_ml_model = step_automl.get_best_auto_ml_model(
         sagemaker_session=pipeline_session,
         role=role
     )
 
-    #step_args = model.create(
-    #    instance_type="ml.m5.large", #["ml.m5.xlarge",]
-    #    accelerator_type="ml.eia1.medium",
-    #)
     step_args = best_auto_ml_model.create(
         instance_type="ml.m5.xlarge"
     )
@@ -478,7 +406,6 @@ def get_pipeline(
         step_args=step_args
     )
     
-    # ["ml.m5.xlarge"]
     transformer = Transformer(
         model_name=step_create_model.properties.ModelName,
         instance_type="ml.m5.xlarge",
@@ -560,14 +487,13 @@ def get_pipeline(
         dataset_type="text/csv",
     )
     
-    # ["ml.m5.large"] 
     model_config = ModelConfig(
         model_name=step_create_model.properties.ModelName,
         instance_count=1,
         instance_type='ml.m5.large',
     )
 
-    # We are using this bias config to configure clarify to detect bias based on the first feature in the featurized vector for Sex
+    # We are using this bias config to configure clarify to detect bias in the features enumerated in the facet_name list
     model_bias_config = BiasConfig(
         label_values_or_threshold=[1], facet_name=["derived_sex", "derived_age_above_62", "derived_age_below_25",
         "derived_race_revisited", "if_co-applicant"]
@@ -776,8 +702,6 @@ def get_pipeline(
     # for drift checks and not register new baselines that are calculated in the Pipeline run.
 
 
-    # ["ml.t2.medium", "ml.m5.large"]
-    # ["ml.m5.large"]
     step_args = best_auto_ml_model.register(
         content_types=["text/csv"],
         response_types=["text/csv"],
